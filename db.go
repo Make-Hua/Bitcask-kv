@@ -43,7 +43,7 @@ func Open(options Options) (*DB, error) {
 		options:    options,
 		mu:         new(sync.RWMutex),
 		olderFiles: make(map[uint32]*data.DataFile),
-		index:      index.NewIndex(index.IndexType(options.IndexType)),
+		index:      index.NewIndex(options.IndexType),
 	}
 
 	// 加载数据文件
