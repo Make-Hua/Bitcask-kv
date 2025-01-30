@@ -1,6 +1,7 @@
 package bitcaskkv
 
 import (
+	"bitcask-go/utils"
 	"fmt"
 	"os"
 	"testing"
@@ -12,8 +13,8 @@ import (
 func destroyDB(db *DB) error {
 	if db != nil {
 		if db.activeFile != nil {
-			if err := db.activeFile.Close(); err != nil {
-				return err
+			if err := db.Close(); err != nil {
+				panic(err)
 			}
 		}
 		// println(db.options.DirPath)
@@ -29,8 +30,8 @@ func destroyDB(db *DB) error {
 func destroyDB1(db *DB) error {
 	if db != nil {
 		if db.activeFile != nil {
-			if err := db.activeFile.Close(); err != nil {
-				return err
+			if err := db.Close(); err != nil {
+				panic(err)
 			}
 		}
 	}
@@ -62,6 +63,7 @@ func TestDB_Put(t *testing.T) {
 	assert.NotNil(t, db)
 
 	/* 1.正常 Put 一条数据 ---> OVER! */
+	// key1, value1 := utils.GetTestKey(1), utils.GetTestValue()
 	err = db.Put([]byte("1"), []byte("24"))
 	assert.Nil(t, err)
 	val1, err := db.Get([]byte("1"))
@@ -296,6 +298,128 @@ func TestDB_Delete(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, val1)
 	assert.Equal(t, []byte("001"), val1)
+
+	/* 销毁创建的临时 DB 以及临时文件 */
+	if err := destroyDB(db); err != nil {
+		assert.Nil(t, err)
+	}
+}
+
+func TestDB_ListKeys(t *testing.T) {
+
+	opts := DefaultOptions
+	dir, _ := os.MkdirTemp("", "bitcask-go-ListKeys")
+	opts.DirPath = dir
+	opts.DataFileSize = 64 * 1024 * 1024
+	db, err := Open(opts)
+	assert.Nil(t, err)
+	assert.NotNil(t, db)
+
+	/* 1.数据库为空 */
+	keys1 := db.ListKeys()
+	assert.Equal(t, 0, len(keys1))
+
+	/* 2.一条数据 */
+	err = db.Put(utils.GetTestKey(11), utils.GetTestValue(11))
+	assert.Nil(t, err)
+	keys2 := db.ListKeys()
+	assert.Equal(t, 1, len(keys2))
+
+	/* 2.多条数据 */
+	err = db.Put(utils.GetTestKey(14), utils.GetTestValue(14))
+	assert.Nil(t, err)
+	err = db.Put(utils.GetTestKey(12), utils.GetTestValue(12))
+	assert.Nil(t, err)
+	err = db.Put(utils.GetTestKey(13), utils.GetTestValue(13))
+	assert.Nil(t, err)
+
+	keys3 := db.ListKeys()
+	assert.Equal(t, 4, len(keys3))
+	for _, k := range keys3 {
+		//t.Log(string(k))
+		assert.NotNil(t, k)
+	}
+
+	/* 销毁创建的临时 DB 以及临时文件 */
+	if err := destroyDB(db); err != nil {
+		assert.Nil(t, err)
+	}
+}
+
+func TestDB_Fold(t *testing.T) {
+
+	opts := DefaultOptions
+	dir, _ := os.MkdirTemp("", "bitcask-go-Fold")
+	opts.DirPath = dir
+	opts.DataFileSize = 64 * 1024 * 1024
+	db, err := Open(opts)
+	assert.Nil(t, err)
+	assert.NotNil(t, db)
+
+	err = db.Put(utils.GetTestKey(14), utils.GetTestValue(14))
+	assert.Nil(t, err)
+	err = db.Put(utils.GetTestKey(12), utils.GetTestValue(12))
+	assert.Nil(t, err)
+	err = db.Put(utils.GetTestKey(13), utils.GetTestValue(13))
+	assert.Nil(t, err)
+
+	err = db.Fold(func(key []byte, value []byte) bool {
+
+		// t.Log(string(key))
+		// t.Log(string(value))
+
+		// if bytes.Compare(key, utils.GetTestKey(12)) == 0 {
+		// 	return false
+		// }
+
+		assert.NotNil(t, key)
+		assert.NotNil(t, value)
+
+		return false
+	})
+
+	assert.Nil(t, err)
+
+	/* 销毁创建的临时 DB 以及临时文件 */
+	if err := destroyDB(db); err != nil {
+		assert.Nil(t, err)
+	}
+}
+
+func TestDB_Close(t *testing.T) {
+
+	opts := DefaultOptions
+	dir, _ := os.MkdirTemp("", "bitcask-go-Fold")
+	opts.DirPath = dir
+	opts.DataFileSize = 64 * 1024 * 1024
+	db, err := Open(opts)
+	assert.Nil(t, err)
+	assert.NotNil(t, db)
+
+	err = db.Put(utils.GetTestKey(14), utils.GetTestValue(14))
+	assert.Nil(t, err)
+
+	/* 销毁创建的临时 DB 以及临时文件 */
+	if err := destroyDB(db); err != nil {
+		assert.Nil(t, err)
+	}
+}
+
+func TestDB_Sync(t *testing.T) {
+
+	opts := DefaultOptions
+	dir, _ := os.MkdirTemp("", "bitcask-go-Fold")
+	opts.DirPath = dir
+	opts.DataFileSize = 64 * 1024 * 1024
+	db, err := Open(opts)
+	assert.Nil(t, err)
+	assert.NotNil(t, db)
+
+	err = db.Put(utils.GetTestKey(14), utils.GetTestValue(14))
+	assert.Nil(t, err)
+
+	err = db.Sync()
+	assert.Nil(t, err)
 
 	/* 销毁创建的临时 DB 以及临时文件 */
 	if err := destroyDB(db); err != nil {
