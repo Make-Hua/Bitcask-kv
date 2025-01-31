@@ -10,6 +10,7 @@ type LogRecordType = byte
 const (
 	LogRecordNormal LogRecordType = iota
 	LogRecordDeleted
+	LogRecordTxnFinished
 )
 
 /* crc + type + keySize + valSize */
@@ -35,6 +36,12 @@ type logRecordHeader struct {
 	recordType LogRecordType /* 该条 LogRecord 对应的类型 */
 	keySize    uint32        /* key 对应的长度 */
 	valueSize  uint32        /* value 对应的长度 */
+}
+
+// TransactionRecord 暂存事务相关的数据
+type TransactionRecord struct {
+	Record *LogRecord
+	Pos    *LogRecordPos
 }
 
 // EncodeLogRecord 对 LogRecord 结构进行编码，返回字节数组和长度

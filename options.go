@@ -2,7 +2,7 @@ package bitcaskkv
 
 import "os"
 
-// 配置项结构体
+// 数据库配置项结构体
 type Options struct {
 	DirPath      string      /* 数据库的数据目录 */
 	DataFileSize int64       /* activeFile 对应阈值大小 */
@@ -10,9 +10,16 @@ type Options struct {
 	IndexType    IndexerType /* 内存索引类型 */
 }
 
+// 迭代器配置项结构体
 type IteratorOptions struct {
 	Prefix  []byte /* 遍历前缀为指定值的 Key, 默认 空 */
 	Reverse bool   /* 是否反向遍历，false 是正向 */
+}
+
+// 原子写配置项结构体
+type WriteBatchOptions struct {
+	MaxBatchNum uint /* 一次批处理的最大处理数据条数 */
+	SyncWrites  bool /* 提交时是否需要 Sync 持久化 */
 }
 
 type IndexerType = int8
@@ -32,4 +39,9 @@ var DefaultOptions = Options{
 var DefaultIteratorOptions = IteratorOptions{
 	Prefix:  nil,
 	Reverse: false,
+}
+
+var DefaultWriteBatchOptions = WriteBatchOptions{
+	MaxBatchNum: 10000,
+	SyncWrites:  true,
 }
