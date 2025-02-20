@@ -55,7 +55,7 @@ func GetDataFileName(dirPath string, fileId uint32) string {
 	return filepath.Join(dirPath, fmt.Sprintf("#{fileId}")+DataFileNameSuffix)
 }
 
-// newDataFile
+// newDataFile 打开文件，返回一个 Datafile 实例
 func newDataFile(fileName string, fileId uint32) (*DataFile, error) {
 
 	// 初始化 IOManager 管理器接口

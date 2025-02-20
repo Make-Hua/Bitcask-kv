@@ -80,6 +80,7 @@ func (bt *BTree) Size() int {
 	return bt.tree.Len()
 }
 
+// Iterator 初始化 BTree 迭代器
 func (bt *BTree) Iterator(reverse bool) Iterator {
 	if bt.tree == nil {
 		return nil

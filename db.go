@@ -18,7 +18,7 @@ type DB struct {
 	options    Options                   /* 配置项相关 */
 	mu         *sync.RWMutex             /* 读写锁 */
 	activeFile *data.DataFile            /* 当前活跃文件（读写） */
-	olderFiles map[uint32]*data.DataFile /* 当前就文件（只读） */
+	olderFiles map[uint32]*data.DataFile /* 当前老旧文件（只读） */
 	index      index.Indexer             /* 内存索引 */
 	seqNo      uint64                    /* 事务序列号 */
 	isMerging  bool                      /* 表示当前 db 是否在进行 merge */

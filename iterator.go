@@ -7,8 +7,8 @@ import (
 
 // Iterator 迭代器
 type Iterator struct {
-	indexIter index.Iterator /* 索引迭代器 */
-	db        *DB
+	indexIter index.Iterator  /* 索引迭代器 */
+	db        *DB             /* 对应 db */
 	Options   IteratorOptions /* 对应配置项 */
 }
 
