@@ -88,7 +88,11 @@ func (bt *BTree) Iterator(reverse bool) Iterator {
 	bt.lock.Lock()
 	defer bt.lock.Unlock()
 	return newBTreeIterator(bt.tree, reverse)
+}
 
+// Close 关闭索引
+func (bt *BTree) Close() error {
+	return nil
 }
 
 // BTree 索引迭代器

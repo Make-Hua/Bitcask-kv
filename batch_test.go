@@ -13,6 +13,11 @@ func TestDB_NewWriteBatch(t *testing.T) {
 	opts := DefaultOptions
 	dir, _ := os.MkdirTemp("", "bitcask-go-NewWriteBatch")
 	opts.DirPath = dir
+	// defer func() {
+	// 	if err := os.RemoveAll(dir); err != nil {
+	// 		t.Errorf("Failed to remove temporary directory: %v", err)
+	// 	}
+	// }()
 	opts.DataFileSize = 64 * 1024 * 1024
 	db, err := Open(opts)
 	assert.Nil(t, err)
@@ -58,6 +63,11 @@ func TestDB_NewWriteBatch_down(t *testing.T) {
 	opts := DefaultOptions
 	dir, _ := os.MkdirTemp("", "bitcask-go-NewWriteBatch")
 	opts.DirPath = dir
+	// defer func() {
+	// 	if err := os.RemoveAll(dir); err != nil {
+	// 		t.Errorf("Failed to remove temporary directory: %v", err)
+	// 	}
+	// }()
 	opts.DataFileSize = 64 * 1024 * 1024
 	db, err := Open(opts)
 	assert.Nil(t, err)
@@ -84,10 +94,11 @@ func TestDB_NewWriteBatch_down(t *testing.T) {
 	err = db.Close()
 	assert.Nil(t, err)
 
-	db2, err := Open(opts)
+	// t.Log(opts.DirPath)
+	db, err = Open(opts)
 	assert.Nil(t, err)
 
-	_, err = db2.Get(utils.GetTestKey(1))
+	_, err = db.Get(utils.GetTestKey(1))
 	assert.Equal(t, ErrKeyNotFound, err)
 
 	// 校验序列号

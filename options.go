@@ -25,15 +25,16 @@ type WriteBatchOptions struct {
 type IndexerType = int8
 
 const (
-	BTree IndexerType = iota + 1 /* BTree 索引 */
-	ART                          /* ART 自适应基数树索引 */
+	BTree  IndexerType = iota + 1 /* BTree 索引 */
+	ART                           /* ART 自适应基数树索引 */
+	BPTree                        /* BPTree B+树索引 */
 )
 
 var DefaultOptions = Options{
 	DirPath:      os.TempDir(),
 	DataFileSize: 256 * 1024 * 1024,
 	SyncWrites:   false,
-	IndexType:    BTree,
+	IndexType:    BPTree,
 }
 
 var DefaultIteratorOptions = IteratorOptions{

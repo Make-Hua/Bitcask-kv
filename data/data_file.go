@@ -17,6 +17,7 @@ const (
 	DataFileNameSuffix    = ".data"
 	HintFileName          = "hint-index"
 	MergeFinishedFileName = "merge-finished"
+	SeqNoFileName         = "seq-no"
 )
 
 // 数据文件结构体
@@ -50,9 +51,17 @@ func OpenMergeFinishedFile(dirPath string) (*DataFile, error) {
 	return newDataFile(fileName, 0)
 }
 
+// OpenSeqNoFile 打开存储事务序列号的文件
+func OpenSeqNoFile(dirPath string) (*DataFile, error) {
+
+	// 完整的数据文件名称
+	fileName := filepath.Join(dirPath, SeqNoFileName)
+	return newDataFile(fileName, 0)
+}
+
 // GetDataFileName 获取
 func GetDataFileName(dirPath string, fileId uint32) string {
-	return filepath.Join(dirPath, fmt.Sprintf("#{fileId}")+DataFileNameSuffix)
+	return filepath.Join(dirPath, fmt.Sprintf("%d%s", fileId, DataFileNameSuffix))
 }
 
 // newDataFile 打开文件，返回一个 Datafile 实例

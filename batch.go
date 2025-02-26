@@ -21,6 +21,12 @@ type WriteBatch struct {
 
 // 初始化原子写操作
 func (db *DB) NewWriteBatch(opts WriteBatchOptions) *WriteBatch {
+
+	// 如果索引为 b+ 树
+	if db.options.IndexType == BPTree && !db.seqNoFileExists && !db.isInitial {
+		panic("cannot use write batch, seq no file not exists")
+	}
+
 	return &WriteBatch{
 		options:       opts,
 		mu:            new(sync.Mutex),

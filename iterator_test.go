@@ -23,6 +23,8 @@ func TestDB_NewIterator(t *testing.T) {
 	assert.NotNil(t, iterator)
 	assert.Equal(t, false, iterator.Valid())
 
+	iterator.Close()
+
 	/* 销毁创建的临时 DB */
 	if err := destroyDB(db); err != nil {
 		assert.Nil(t, err)
@@ -45,13 +47,16 @@ func TestDB_Iterator_One_Value(t *testing.T) {
 	assert.Nil(t, err)
 
 	iterator := db.NewIterator(DefaultIteratorOptions)
+
 	assert.NotNil(t, iterator)
 	assert.Equal(t, true, iterator.Valid())
 	assert.Equal(t, utils.GetTestKey(10), iterator.Key())
 	val, err := iterator.Value()
+
 	assert.Nil(t, err)
 	assert.Equal(t, utils.GetTestValue(10), val)
 	//t.Log(utils.GetTestValue(10))
+	iterator.Close()
 
 	/* 销毁创建的临时 DB */
 	if err := destroyDB(db); err != nil {
@@ -92,6 +97,7 @@ func TestDB_Iterator_Multi_Value(t *testing.T) {
 	for iter1.Seek([]byte("c")); iter1.Valid(); iter1.Next() {
 		assert.NotNil(t, iter1.Key())
 	}
+	iter1.Close()
 
 	/* 反向迭代 */
 	iterOpts1 := DefaultIteratorOptions
@@ -105,6 +111,7 @@ func TestDB_Iterator_Multi_Value(t *testing.T) {
 	for iter2.Seek([]byte("c")); iter2.Valid(); iter2.Next() {
 		assert.NotNil(t, iter2.Key())
 	}
+	iter2.Close()
 
 	/* 指定 perfix  */
 	iterOps2 := DefaultIteratorOptions
@@ -114,6 +121,7 @@ func TestDB_Iterator_Multi_Value(t *testing.T) {
 		//t.Log(string(iter3.Key()))
 		assert.NotNil(t, iter3.Key())
 	}
+	iter3.Close()
 
 	/* 销毁创建的临时 DB */
 	if err := destroyDB(db); err != nil {

@@ -316,12 +316,16 @@ func TestDB_ListKeys(t *testing.T) {
 	assert.NotNil(t, db)
 
 	/* 1.数据库为空 */
+	// fmt.Println("AA1")
 	keys1 := db.ListKeys()
 	assert.Equal(t, 0, len(keys1))
 
 	/* 2.一条数据 */
+	// fmt.Println("AA1")
 	err = db.Put(utils.GetTestKey(11), utils.GetTestValue(11))
 	assert.Nil(t, err)
+
+	//fmt.Println("AA2")
 	keys2 := db.ListKeys()
 	assert.Equal(t, 1, len(keys2))
 
@@ -333,6 +337,7 @@ func TestDB_ListKeys(t *testing.T) {
 	err = db.Put(utils.GetTestKey(13), utils.GetTestValue(13))
 	assert.Nil(t, err)
 
+	//fmt.Println("AA3")
 	keys3 := db.ListKeys()
 	assert.Equal(t, 4, len(keys3))
 	for _, k := range keys3 {
