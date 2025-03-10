@@ -4,10 +4,13 @@ import "os"
 
 // 数据库配置项结构体
 type Options struct {
-	DirPath      string      /* 数据库的数据目录 */
-	DataFileSize int64       /* activeFile 对应阈值大小 */
-	SyncWrites   bool        /* 每次写数据是否持久化 */
-	IndexType    IndexerType /* 内存索引类型 */
+	DirPath            string      /* 数据库的数据目录 */
+	DataFileSize       int64       /* activeFile 对应阈值大小 */
+	SyncWrites         bool        /* 每次写数据是否持久化 */
+	BytesPerSync       uint        /* 累计写入多少字节进行持久化 */
+	IndexType          IndexerType /* 内存索引类型 */
+	MMapAtStartup      bool        /* IO 接口是否使用 MMap */
+	DataFileMergeRatio float32     /* 数据文件合并的阈值 */
 }
 
 // 迭代器配置项结构体
@@ -31,10 +34,14 @@ const (
 )
 
 var DefaultOptions = Options{
-	DirPath:      os.TempDir(),
-	DataFileSize: 256 * 1024 * 1024,
-	SyncWrites:   false,
-	IndexType:    BPTree,
+	DirPath:            os.TempDir(),
+	DataFileSize:       256 * 1024 * 1024,
+	SyncWrites:         false,
+	BytesPerSync:       0,
+	IndexType:          BTree,
+	MMapAtStartup:      true,
+	DataFileMergeRatio: 0.5, // 0.5 表示无效数据达到总数据的一半，则进行 merge 操作
+
 }
 
 var DefaultIteratorOptions = IteratorOptions{

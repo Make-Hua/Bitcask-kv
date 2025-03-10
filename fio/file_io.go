@@ -14,11 +14,11 @@ func NewFileIOManager(fileName string) (*FileIO, error) {
 	// - os.O_CREATE：如果文件不存在，则创建该文件
 	// - os.O_RDWR：以读写模式打开文件，允许对文件进行读取和写入操作
 	// - os.O_APPEND：以追加模式打开文件，写入的数据会被追加到文件末尾
-	// DateFilePerm：表示该文件的权限
+	// DataFilePerm：表示该文件的权限
 	fd, err := os.OpenFile(
 		fileName,
 		os.O_CREATE|os.O_RDWR|os.O_APPEND,
-		DateFilePerm,
+		DataFilePerm,
 	)
 
 	// 错误处理

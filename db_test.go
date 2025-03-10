@@ -4,9 +4,11 @@ import (
 	"bitcask-go/utils"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/rand"
 )
 
 // 销毁 DB 实例，同时销毁 DB 存储以及相关文件
@@ -35,6 +37,43 @@ func destroyDB1(db *DB) error {
 			}
 		}
 	}
+	return nil
+}
+
+// Create1024MBData 函数用于在指定目录下创建 1024 MB 的数据文件
+func Create1024MBData(dirPath string) error {
+
+	opts := DefaultOptions
+	opts.DirPath = "/tmp/bitcask-go"
+	db, err := Open(opts)
+	if err != nil {
+		return err
+	}
+
+	targetSize := 1024 * 1024 * 1024
+	chunkSize := 1024 * 1024 // 每次写入 1MB
+	written := 0
+	for written < targetSize {
+		key := []byte("test-key-" + strconv.Itoa(written/chunkSize))
+		value := make([]byte, chunkSize)
+		for i := range value {
+			// 生成 0 到 255 之间的随机字节
+			value[i] = byte(rand.Intn(256))
+		}
+
+		err := db.Put(key, value)
+		if err != nil {
+			return err
+		}
+
+		written += chunkSize
+	}
+
+	// 销毁创建的临时 DB
+	if err := destroyDB1(db); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -413,7 +452,7 @@ func TestDB_Close(t *testing.T) {
 func TestDB_Sync(t *testing.T) {
 
 	opts := DefaultOptions
-	dir, _ := os.MkdirTemp("", "bitcask-go-Fold")
+	dir, _ := os.MkdirTemp("", "bitcask-go-Sync")
 	opts.DirPath = dir
 	opts.DataFileSize = 64 * 1024 * 1024
 	db, err := Open(opts)
@@ -430,4 +469,92 @@ func TestDB_Sync(t *testing.T) {
 	if err := destroyDB(db); err != nil {
 		assert.Nil(t, err)
 	}
+}
+
+func TestDB_FileLock(t *testing.T) {
+
+	opts := DefaultOptions
+	dir, _ := os.MkdirTemp("", "bitcask-go-FileLock")
+	opts.DirPath = dir
+	db, err := Open(opts)
+	assert.Nil(t, err)
+	assert.NotNil(t, db)
+
+	_, err = Open(opts)
+	assert.Equal(t, ErrDatabaseIsUsing, err)
+
+	err = db.Close()
+	assert.Nil(t, err)
+
+	fmt.Println("AAA")
+	// 在此出现死锁
+	db2, err := Open(opts)
+	fmt.Println("AAA")
+
+	assert.NotNil(t, db2)
+	assert.Nil(t, err)
+
+	/* 销毁创建的临时 DB 以及临时文件 */
+	if err := destroyDB(db2); err != nil {
+		assert.Nil(t, err)
+	}
+}
+
+/* // 测试 标准IO 和 MMap 时间
+func TestCreateData(t *testing.T) {
+	err := Create1024MBData("/tmp/bitcask-go")
+	assert.Nil(t, err)
+}
+
+func TestDB_Open2(t *testing.T) {
+
+	opts := DefaultOptions
+	opts.DirPath = "/tmp/bitcask-go"
+
+	// 关闭启动时使用 mmap
+	// opts.MMapAtStartup = true
+
+	now := time.Now()
+	db, err := Open(opts)
+	t.Log("open time", time.Since(now))
+
+	assert.Nil(t, err)
+	assert.NotNil(t, db)
+
+}
+*/
+
+func TestDB_Stat(t *testing.T) {
+
+	opts := DefaultOptions
+	dir, _ := os.MkdirTemp("", "bitcask-go-Stat")
+	opts.DirPath = dir
+	db, err := Open(opts)
+	assert.Nil(t, err)
+	assert.NotNil(t, db)
+	defer func() {
+		/* 销毁创建的临时 DB 以及临时文件 */
+		if err := destroyDB(db); err != nil {
+			assert.Nil(t, err)
+		}
+	}()
+
+	for i := 100; i < 10000; i++ {
+		err := db.Put(utils.GetTestKey(i), utils.GetTestValue(128))
+		assert.Nil(t, err)
+	}
+
+	for i := 100; i < 1000; i++ {
+		err := db.Delete(utils.GetTestKey(i))
+		assert.Nil(t, err)
+	}
+
+	for i := 2000; i < 5000; i++ {
+		err := db.Put(utils.GetTestKey(i), utils.GetTestValue(128))
+		assert.Nil(t, err)
+	}
+
+	stat := db.Stat()
+
+	assert.NotNil(t, stat)
 }

@@ -28,11 +28,11 @@ type DataFile struct {
 }
 
 // OpenDataFile 打开新的数据文件
-func OpenDataFile(dirPath string, fileId uint32) (*DataFile, error) {
+func OpenDataFile(dirPath string, fileId uint32, ioType fio.FileIOType) (*DataFile, error) {
 
 	// 完整的数据文件名称
 	fileName := GetDataFileName(dirPath, fileId)
-	return newDataFile(fileName, fileId)
+	return newDataFile(fileName, fileId, ioType)
 }
 
 // OpenHintFile 打开一个 Hint 文件
@@ -40,7 +40,7 @@ func OpenHintFile(dirPath string) (*DataFile, error) {
 
 	// 完整的数据文件名称
 	fileName := filepath.Join(dirPath, HintFileName)
-	return newDataFile(fileName, 0)
+	return newDataFile(fileName, 0, fio.StandardFIO)
 }
 
 // OpenMergeFinishedFile 打开标识 merge 完成的文件
@@ -48,7 +48,7 @@ func OpenMergeFinishedFile(dirPath string) (*DataFile, error) {
 
 	// 完整的数据文件名称
 	fileName := filepath.Join(dirPath, MergeFinishedFileName)
-	return newDataFile(fileName, 0)
+	return newDataFile(fileName, 0, fio.StandardFIO)
 }
 
 // OpenSeqNoFile 打开存储事务序列号的文件
@@ -56,7 +56,7 @@ func OpenSeqNoFile(dirPath string) (*DataFile, error) {
 
 	// 完整的数据文件名称
 	fileName := filepath.Join(dirPath, SeqNoFileName)
-	return newDataFile(fileName, 0)
+	return newDataFile(fileName, 0, fio.StandardFIO)
 }
 
 // GetDataFileName 获取
@@ -65,10 +65,10 @@ func GetDataFileName(dirPath string, fileId uint32) string {
 }
 
 // newDataFile 打开文件，返回一个 Datafile 实例
-func newDataFile(fileName string, fileId uint32) (*DataFile, error) {
+func newDataFile(fileName string, fileId uint32, ioType fio.FileIOType) (*DataFile, error) {
 
 	// 初始化 IOManager 管理器接口
-	ioManager, err := fio.NewIOManager(fileName)
+	ioManager, err := fio.NewIOManager(fileName, ioType)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +173,19 @@ func (df *DataFile) Sync() error {
 // Close 关闭数据文件
 func (df *DataFile) Close() error {
 	return df.IoManager.Close()
+}
+
+// 重置 IOManager
+func (df *DataFile) SetIOManager(dirPath string, ioType fio.FileIOType) error {
+	if err := df.IoManager.Close(); err != nil {
+		return err
+	}
+	ioManager, err := fio.NewIOManager(GetDataFileName(dirPath, df.FileId), ioType)
+	if err != nil {
+		return err
+	}
+	df.IoManager = ioManager
+	return nil
 }
 
 // 从指定 offset 位置读取 n 个字节的数据
