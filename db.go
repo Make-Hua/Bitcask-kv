@@ -239,6 +239,13 @@ func (db *DB) Stat() *Stat {
 	}
 }
 
+// 拷贝数据库（优化 备份）
+func (db *DB) Backup(dir string) error {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+	return utils.CopyDir(db.options.DirPath, dir, []string{fileLockName})
+}
+
 // Put 数据存储引擎对外提供的操作方法，以追加的方式将数据写入活跃文件（key 不能为空）
 func (db *DB) Put(key []byte, value []byte) error {
 
