@@ -756,3 +756,8 @@ func (db *DB) resetIoType() error {
 	}
 	return nil
 }
+
+// GetDirPath 提供给外的接口
+func (db *DB) GetDirPath() string {
+	return db.options.DirPath
+}
