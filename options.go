@@ -35,9 +35,9 @@ const (
 
 var DefaultOptions = Options{
 	DirPath:            os.TempDir(),
-	DataFileSize:       256 * 1024 * 1024,
+	DataFileSize:       1024 * 1024 * 1024,
 	SyncWrites:         false,
-	BytesPerSync:       0,
+	BytesPerSync:       64 * 1024 * 1024,
 	IndexType:          BTree,
 	MMapAtStartup:      true,
 	DataFileMergeRatio: 0.5, // 0.5 表示无效数据达到总数据的一半，则进行 merge 操作

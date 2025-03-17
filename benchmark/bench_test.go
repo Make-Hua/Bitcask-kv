@@ -17,7 +17,7 @@ var db *bitcaskkv.DB
 func init() {
 
 	opts := bitcaskkv.DefaultOptions
-	dir, _ := os.MkdirTemp("", "bitcask-go-benchPUT")
+	dir, _ := os.MkdirTemp("", "bitcask-go-bench")
 	opts.DirPath = dir
 
 	var err error
@@ -40,30 +40,6 @@ func Benchmark_Put1KB(b *testing.B) {
 	}
 
 }
-
-// func Benchmark_Put1MB(b *testing.B) {
-
-// 	b.ResetTimer()
-// 	b.ReportAllocs()
-
-// 	for i := 0; i < b.N; i++ {
-// 		err := db.Put(utils.GetTestKey(i), utils.GetTestValue(1024*1024)) // 1kb 大小 可以定量分析
-// 		assert.Nil(b, err)
-// 	}
-
-// }
-
-// func Benchmark_Put1GB(b *testing.B) {
-
-// 	b.ResetTimer()
-// 	b.ReportAllocs()
-
-// 	for i := 0; i < b.N; i++ {
-// 		err := db.Put(utils.GetTestKey(i), utils.GetTestValue(1024*1024*1024)) // 1kb 大小 可以定量分析
-// 		assert.Nil(b, err)
-// 	}
-
-// }
 
 func Benchmark_Get1KB(b *testing.B) {
 
