@@ -193,7 +193,7 @@ func TestRedisDataStructure_SIsMember(t *testing.T) {
 func TestRedisDataStructure_SRem(t *testing.T) {
 
 	opts := bitcaskkv.DefaultOptions
-	dir, _ := os.MkdirTemp("", "bitcask-go-redis-SIsMember")
+	dir, _ := os.MkdirTemp("", "bitcask-go-redis-SRem")
 	opts.DirPath = dir
 	rds, err := NewRedisDataStructure(opts)
 	assert.Nil(t, err)
@@ -214,6 +214,38 @@ func TestRedisDataStructure_SRem(t *testing.T) {
 	ok, err = rds.SRem(utils.GetTestKey(1), []byte("val2"))
 	assert.Nil(t, err)
 	assert.True(t, ok)
+
+	err = destroyDB(rds.db)
+	assert.Nil(t, err)
+}
+
+func TestRedisDataStructure_List(t *testing.T) {
+
+	opts := bitcaskkv.DefaultOptions
+	dir, _ := os.MkdirTemp("", "bitcask-go-redis-List")
+	opts.DirPath = dir
+	rds, err := NewRedisDataStructure(opts)
+	assert.Nil(t, err)
+
+	res, err := rds.LPush(utils.GetTestKey(1), []byte("val1"))
+	assert.Nil(t, err)
+	assert.Equal(t, uint32(1), res)
+	res, err = rds.LPush(utils.GetTestKey(1), []byte("val1"))
+	assert.Nil(t, err)
+	assert.Equal(t, uint32(2), res)
+	res, err = rds.LPush(utils.GetTestKey(1), []byte("val2"))
+	assert.Nil(t, err)
+	assert.Equal(t, uint32(3), res)
+
+	val, err := rds.LPop(utils.GetTestKey(1))
+	assert.Nil(t, err)
+	assert.Equal(t, "val2", string(val))
+	val, err = rds.LPop(utils.GetTestKey(1))
+	assert.Nil(t, err)
+	assert.Equal(t, "val1", string(val))
+	val, err = rds.RPop(utils.GetTestKey(1))
+	assert.Nil(t, err)
+	assert.Equal(t, "val1", string(val))
 
 	err = destroyDB(rds.db)
 	assert.Nil(t, err)
