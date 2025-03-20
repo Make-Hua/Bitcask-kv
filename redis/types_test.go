@@ -250,3 +250,30 @@ func TestRedisDataStructure_List(t *testing.T) {
 	err = destroyDB(rds.db)
 	assert.Nil(t, err)
 }
+
+func TestRedisDataStructure_ZScore(t *testing.T) {
+
+	opts := bitcaskkv.DefaultOptions
+	dir, _ := os.MkdirTemp("", "bitcask-go-redis-List")
+	opts.DirPath = dir
+	rds, err := NewRedisDataStructure(opts)
+	assert.Nil(t, err)
+
+	ok, err := rds.ZAdd(utils.GetTestKey(1), 113, []byte("val1"))
+	assert.Nil(t, err)
+	assert.True(t, ok)
+	ok, err = rds.ZAdd(utils.GetTestKey(1), 333, []byte("val1"))
+	assert.Nil(t, err)
+	assert.False(t, ok)
+	ok, err = rds.ZAdd(utils.GetTestKey(1), 99, []byte("val2"))
+	assert.Nil(t, err)
+	assert.True(t, ok)
+
+	score, err := rds.ZScore(utils.GetTestKey(1), []byte("val1"))
+	assert.Nil(t, err)
+	assert.Equal(t, float64(333), score)
+	score, err = rds.ZScore(utils.GetTestKey(1), []byte("val2"))
+	assert.Nil(t, err)
+	assert.Equal(t, float64(99), score)
+
+}

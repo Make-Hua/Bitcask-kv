@@ -2,6 +2,7 @@ package redis
 
 import (
 	bitcaskkv "bitcask-go"
+	"bitcask-go/utils"
 	"encoding/binary"
 	"errors"
 	"time"
@@ -370,6 +371,88 @@ func (rds *RedisDataStructure) popInner(key []byte, isLeft bool) ([]byte, error)
 	}
 
 	return element, nil
+}
+
+// ============================== zset =====================================
+
+func (rds *RedisDataStructure) ZAdd(key []byte, score float64, member []byte) (bool, error) {
+
+	meta, err := rds.findMetadata(key, ZSet)
+	if err != nil {
+		return false, err
+	}
+
+	// 构造数据部分的 key
+	zk := &zsetInternalKey{
+		key:     key,
+		version: meta.version,
+		score:   score,
+		member:  member,
+	}
+
+	// 查看是否以及存在
+	var exist = true
+	value, err := rds.db.Get(zk.encodeWithMember())
+	if err != nil && err != bitcaskkv.ErrKeyNotFound {
+		return false, err
+	}
+	if err == bitcaskkv.ErrKeyNotFound {
+		exist = false
+	}
+
+	if exist {
+		if score == utils.FloatFromBytes(value) {
+			return false, nil
+		}
+	}
+
+	// 更新元数据和数据
+	wb := rds.db.NewWriteBatch(bitcaskkv.DefaultWriteBatchOptions)
+	if !exist {
+		meta.size++
+		wb.Put(key, meta.encode())
+	}
+	if exist {
+		oldKey := &zsetInternalKey{
+			key:     key,
+			version: meta.version,
+			member:  member,
+			score:   utils.FloatFromBytes(value),
+		}
+		_ = wb.Delete(oldKey.encodeWithScore())
+	}
+	wb.Put(zk.encodeWithMember(), utils.Float64ToBytes(score))
+	wb.Put(zk.encodeWithScore(), nil)
+	if err = wb.Commit(); err != nil {
+		return false, nil
+	}
+
+	return !exist, nil
+}
+
+func (rds *RedisDataStructure) ZScore(key []byte, member []byte) (float64, error) {
+
+	meta, err := rds.findMetadata(key, ZSet)
+	if err != nil {
+		return -1, err
+	}
+	if meta.size == 0 {
+		return -1, nil
+	}
+
+	// 构造数据部分的 key
+	zk := &zsetInternalKey{
+		key:     key,
+		version: meta.version,
+		member:  member,
+	}
+
+	value, err := rds.db.Get(zk.encodeWithMember())
+	if err != nil {
+		return -1, err
+	}
+
+	return utils.FloatFromBytes(value), nil
 }
 
 func (rds *RedisDataStructure) findMetadata(key []byte, dataType redisDataType) (*metadata, error) {
